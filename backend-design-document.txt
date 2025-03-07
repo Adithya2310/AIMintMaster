@@ -1,0 +1,89 @@
+BackenSmart Contract Structure Document - SonicNFTMarketplace
+
+1️⃣ Structs
+NFT
+Defines the properties of an NFT in the marketplace.
+
+Field	Type	Description
+tokenId	uint256	Unique identifier for the NFT.
+creator	address	Address of the NFT creator.
+owner	address	Current owner of the NFT.
+name	string	Name of the NFT.
+description	string	Description of the NFT.
+imageURI	string	Link to the NFT image.
+price	uint256	Price of the NFT (in wei).
+listed	bool	Whether the NFT is listed for sale or not.
+
+2️⃣ Functions
+
+1. Mint & List NFT
+mintNFT(string _name, string _description, string _imageURI, uint256 _price) external
+
+✅ Description:
+Mints a new NFT and automatically lists it for sale.
+
+✅ Parameters:
+_name → Name of the NFT.
+_description → Description of the NFT.
+_imageURI → URL of the NFT image.
+_price → Initial price in wei.
+
+✅ Events Emitted:
+NFTMinted(tokenId, creator, imageURI, price)
+
+1. Buy NFT
+buyNFT(uint256 _tokenId) external payable
+
+✅ Description:
+Allows a user to buy an NFT listed for sale.
+
+✅ Parameters:
+_tokenId → The ID of the NFT being purchased.
+
+✅ Validations:
+NFT must be listed for sale.
+Buyer must send enough ETH.
+Buyer cannot be the current owner.
+
+✅ Events Emitted:
+NFTBought(tokenId, buyer, price)
+Update NFT Price
+updatePrice(uint256 _tokenId, uint256 _newPrice) external
+
+✅ Description:
+Allows the NFT owner to update its price.
+
+✅ Parameters:
+_tokenId → The ID of the NFT.
+_newPrice → The new price in wei.
+
+✅ Validations:
+Only the NFT owner can update the price.
+Price must be greater than zero.
+
+✅ Events Emitted:
+PriceUpdated(tokenId, newPrice)
+
+2. Fetch Listed NFTs
+getAllListedNFTs() external view returns (NFT[] memory)
+✅ Description:
+Fetches all currently listed NFTs.
+
+✅ Returns:
+An array of NFTs that are listed for sale.
+3️⃣ Events
+Event Name	Parameters	Description
+NFTMinted	uint256 tokenId, address creator, string imageURI, uint256 price	Emitted when an NFT is minted.
+NFTBought	uint256 tokenId, address buyer, uint256 price	Emitted when an NFT is purchased.
+PriceUpdated	uint256 tokenId, uint256 newPrice	Emitted when an NFT’s price is updated.
+4️⃣ Frontend Integration Notes
+The frontend should listen for events to update the UI in real-time.
+The marketplace will fetch NFTs using getAllListedNFTs().
+Ensure that ETH values are converted properly when setting or displaying prices (Wei to ETH).
+
+
+
+
+
+
+

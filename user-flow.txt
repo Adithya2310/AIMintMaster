@@ -1,0 +1,27 @@
+App Flow
+
+User Actions & Navigation
+
+1️⃣ Mint & List NFT (Single Flow)
+
+User Clicks "Mint NFT" → Opens a pop-up modal.
+Enter ImageURL or uses AI to generate the NFT image (name & description).
+User Sets Price → Confirms listing.
+Transaction Completes → NFT is minted and listed in the Marketplace automatically.
+
+2️⃣ Buy NFT
+
+User Browses Marketplace → Selects an NFT.
+Clicks "Buy" → Transaction confirmation modal appears.
+Transaction Completes → Ownership transfers to the buyer.
+
+3️⃣ Get AI-Powered NFT Buying Suggestions
+
+User Navigates to DeFAI Smart Buyer Chat.
+Enters Preferences (Budget, Collection, Traits).
+AI Suggests NFTs from the nfts listed in our application.
+
+4️⃣ Manage Owned NFTs
+
+User Opens User Page → Views Owned & Listed NFTs.
+
