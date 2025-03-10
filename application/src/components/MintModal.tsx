@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Upload, Plus } from 'lucide-react';
 import AIPricePredictor from './AIPricePredictor';
 import AIImageGenerator from './AIImageGenerator';
+import { uploadToPinata } from '@/utils/pinata';
 
 interface MintModalProps {
   isOpen: boolean;
@@ -70,7 +71,7 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
     setPrice(selectedPrice);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name || !description || !imageUrl || price <= 0) {
@@ -79,11 +80,59 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Upload image to IPFS
+      const { cid, url } = await uploadToPinata(imageUrl, name);
+      console.log('Image uploaded to IPFS:', { cid, url });
+
+      // Create metadata JSON
+      const metadata = {
+        name,
+        description,
+        image: url,
+        attributes: [
+          {
+            trait_type: "Price",
+            value: price
+          }
+        ]
+      };
+
+      // Upload metadata to IPFS
+      const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
+      const formData = new FormData();
+      formData.append('file', metadataBlob, 'metadata.json');
+      
+      const metadataRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_PINATE_JWT_TOKEN}`,
+        },
+        body: formData,
+      });
+
+      const metadataData = await metadataRes.json();
+      
+      if (!metadataRes.ok) {
+        throw new Error('Error uploading metadata to Pinata');
+      }
+
+      console.log('NFT Minted:', { 
+        name, 
+        description, 
+        imageCID: cid,
+        imageUrl: url,
+        metadataCID: metadataData.IpfsHash,
+        metadataUrl: `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${metadataData.IpfsHash}`,
+        price 
+      });
+
       onClose();
-      console.log('NFT Minted:', { name, description, imageUrl, price });
-    }, 2000);
+    } catch (error) {
+      console.error('Error during minting process:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const goToNextStep = () => {
