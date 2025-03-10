@@ -113,7 +113,7 @@ const Index = () => {
         <div className="text-center">
           <h1 className="font-orbitron text-4xl md:text-5xl lg:text-6xl font-bold mb-4 animate-fade-in">
             <span className="bg-gradient-to-r from-neonBlue via-neonPurple to-electricPink inline-block text-transparent bg-clip-text">
-              AI-Powered NFT Marketplace
+              Sonic AI Mint Master
             </span>
           </h1>
           <p className="text-white/70 max-w-3xl mx-auto mb-8 text-lg animate-fade-in-slow">
