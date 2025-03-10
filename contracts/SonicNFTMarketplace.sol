@@ -99,4 +99,14 @@ contract SonicNFTMarketplace is ERC721URIStorage {
         }
         return listedNFTs;
     }
+
+    function getAllNFTs() external view returns (NFT[] memory) {
+        NFT[] memory allNFTs = new NFT[](_tokenIds.current());
+        uint256 index = 0;
+        for (uint256 i = 1; i <= _tokenIds.current(); i++) {
+            allNFTs[index] = nfts[i];
+            index++;
+        }
+        return allNFTs;
+    }
 }
