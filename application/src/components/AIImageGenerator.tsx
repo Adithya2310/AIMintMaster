@@ -1,44 +1,23 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { ImageIcon, X, Check, Loader } from 'lucide-react';
+import { ImageIcon, X, Check, Loader, Sparkles } from 'lucide-react';
 
 interface AIImageGeneratorProps {
+  name: string;
   description: string;
   onImageSelect: (imageUrl: string) => void;
 }
 
-const AIImageGenerator: React.FC<AIImageGeneratorProps> = ({ description, onImageSelect }) => {
+const AIImageGenerator: React.FC<AIImageGeneratorProps> = ({ name, description, onImageSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(true);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Sample images array
-  const sampleImages = [
-    "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=500&h=500&auto=format",
-    "https://images.unsplash.com/photo-1612487528505-d2338264c821?q=80&w=500&h=500&auto=format",
-    "https://images.unsplash.com/photo-1578632292335-df3abbb0d586?q=80&w=500&h=500&auto=format",
-    "https://images.unsplash.com/photo-1621075160523-b936ad96132a?q=80&w=500&h=500&auto=format",
-    "https://images.unsplash.com/photo-1519638399535-1b036603ac77?q=80&w=500&h=500&auto=format",
-    "https://images.unsplash.com/photo-1634926878768-2a5b3c42f139?q=80&w=500&h=500&auto=format",
-  ];
-
-  // Mock image generation based on description
-  useEffect(() => {
-    if (isOpen && description.length > 3 && generatedImages.length === 0) {
-      setIsGenerating(true);
-      
-      // Simulate AI image generation delay
-      const timer = setTimeout(() => {
-        // Use sample images for demo
-        setGeneratedImages(sampleImages);
-        setIsGenerating(false);
-      }, 2000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, description, generatedImages.length, sampleImages]);
+  // // Sample images array
+  // const sampleImages = [
+  //   "https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=500&h=500&auto=format"
+  // ];
 
   // Handle click outside modal to close
   useEffect(() => {
@@ -57,10 +36,102 @@ const AIImageGenerator: React.FC<AIImageGeneratorProps> = ({ description, onImag
     };
   }, [isOpen]);
 
-  const openModal = () => {
+  const generateImage = async (model: string, prompt: string) => {
+    const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+    const apiKey = import.meta.env.VITE_CLOUDFLARE_APIKEY;
+
+    try {
+      const response = await fetch(`/api/cloudflare/client/v4/accounts/${accountId}/ai/run/@cf/${model}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ 
+          prompt,
+          num_steps: 20,  // Add default parameters
+          guidance: 7.5
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Error for model ${model}:`, {
+          status: response.status,
+          statusText: response.statusText,
+          errorText
+        });
+        throw new Error(`HTTP error! status: ${response.status}, model: ${model}`);
+      }
+
+      const blob = await response.blob();
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          const base64Image = base64data.split(',')[1];
+          resolve(base64Image);
+        };
+        reader.onerror = () => {
+          reject(new Error('Failed to convert image to base64'));
+        };
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error(`Failed to generate image for model ${model}:`, error);
+      throw error;
+    }
+  };
+
+  const openModal = async() => {
+    console.log("Generating AI images...");
     setIsOpen(true);
-    setSelectedImageIndex(null);
-    setGeneratedImages([]);
+    setIsGenerating(true);
+    
+    const accountId = import.meta.env.VITE_CLOUDFLARE_ACCOUNT_ID;
+    const apiKey = import.meta.env.VITE_CLOUDFLARE_APIKEY;
+    
+    if (!accountId || !apiKey) {
+      console.error("Cloudflare credentials not found");
+      setIsGenerating(false);
+      return;
+    }
+
+    const prompt = `Generate an NFT for Name:'${name}' and Description:'${description}'`;
+    const models = [
+      'stabilityai/stable-diffusion-xl-base-1.0',
+      'lykon/dreamshaper-8-lcm',
+      'runwayml/stable-diffusion-v1-5'  // Removed -inpainting suffix
+    ];
+
+    try {
+      // Generate images sequentially instead of parallel to avoid rate limits
+      const images = [];
+      for (const model of models) {
+        try {
+          const image = await generateImage(model, prompt);
+          images.push(image);
+        } catch (error) {
+          console.error(`Failed to generate image for ${model}:`, error);
+          // Continue with other models even if one fails
+          images.push(null);
+        }
+      }
+      
+      // Filter out any null values from failed generations
+      const successfulImages = images.filter(img => img !== null);
+      if (successfulImages.length > 0) {
+        setGeneratedImages(successfulImages);
+      } else {
+        throw new Error('All image generations failed');
+      }
+    }
+    catch(error) {
+      console.error("Error generating AI images:", error);
+    }
+    finally {
+      setIsGenerating(false);
+    }
   };
 
   const closeModal = () => {
@@ -81,11 +152,11 @@ const AIImageGenerator: React.FC<AIImageGeneratorProps> = ({ description, onImag
   return (
     <>
       <button 
-        onClick={openModal} 
-        className="ml-2 w-10 h-10 rounded-full flex items-center justify-center bg-white/5 text-white/70 hover:bg-white/10 transition-all duration-300"
-        title="Generate AI images"
+        onClick={description && openModal} 
+        className={`ml-2 w-10 h-10 rounded-full flex items-center justify-center bg-white/5 text-white/70 ${description ? 'hover:bg-white/10' : 'opacity-50 cursor-not-allowed'} transition-all duration-300`}
+        title="Generate AI image"
       >
-        <ImageIcon size={18} />
+        <Sparkles size={18}/>
       </button>
       
       {isOpen && (
@@ -126,7 +197,7 @@ const AIImageGenerator: React.FC<AIImageGeneratorProps> = ({ description, onImag
                     <p className="text-white/60 text-sm mb-4">Click an image to select it.</p>
                     
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {(generatedImages.length > 0 ? generatedImages : sampleImages).map((image, index) => (
+                      {generatedImages.length>0 && (generatedImages.length > 0 && generatedImages).map((image, index) => (
                         <div 
                           key={index} 
                           className={`relative aspect-square rounded-lg overflow-hidden border-2 cursor-pointer transition-all duration-300 ${
@@ -137,7 +208,7 @@ const AIImageGenerator: React.FC<AIImageGeneratorProps> = ({ description, onImag
                           onClick={() => handleImageSelect(index)}
                         >
                           <img 
-                            src={image} 
+                            src={`data:image/png;base64,${image}`}
                             alt={`Image option ${index + 1}`} 
                             className="w-full h-full object-cover"
                           />

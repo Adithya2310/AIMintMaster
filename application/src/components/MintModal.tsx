@@ -34,11 +34,11 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
         onClose();
       }
     };
-    
+
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
+
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -48,7 +48,7 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
     const file = e.target.files?.[0];
     if (file) {
       setIsUploading(true);
-      
+
       setTimeout(() => {
         const reader = new FileReader();
         reader.onload = () => {
@@ -72,13 +72,13 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name || !description || !imageUrl || price <= 0) {
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     setTimeout(() => {
       setIsSubmitting(false);
       onClose();
@@ -102,7 +102,7 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div 
+      <div
         ref={modalRef}
         className="glass-panel w-full max-w-md animate-scale-in"
       >
@@ -110,14 +110,14 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
           <h3 className="font-orbitron text-lg text-white">
             {mintingStep === 1 ? 'Create New NFT' : 'Set NFT Price'}
           </h3>
-          <button 
+          <button
             onClick={onClose}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 text-white/70 transition-all duration-200"
           >
             <X size={16} />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="p-6">
           {mintingStep === 1 ? (
             <>
@@ -134,7 +134,7 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
                   required
                 />
               </div>
-              
+
               <div className="mb-5">
                 <label className="block text-sm text-white/70 mb-2">
                   Description
@@ -147,12 +147,12 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
                   required
                 />
               </div>
-              
+
               <div className="mb-5">
                 <label className="block text-sm text-white/70 mb-2">
-                  Image URL
+                  Image(base64)
                 </label>
-                <div className="relative">
+                <div className="relative  flex justify-between">
                   <input
                     type="text"
                     value={imageUrl}
@@ -160,17 +160,18 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
                     placeholder="Enter image URL here"
                     className="neon-input w-full pr-12"
                   />
-                  <AIImageGenerator 
-                    description={description} 
-                    onImageSelect={handleAIImageSelect} 
+                  <AIImageGenerator
+                    name={name}
+                    description={description}
+                    onImageSelect={handleAIImageSelect}
                   />
                 </div>
-                
+
                 {imageUrl && (
                   <div className="mt-3 relative rounded-lg overflow-hidden aspect-square">
-                    <img 
-                      src={imageUrl} 
-                      alt="NFT Preview" 
+                    <img
+                      src={`data:image/png;base64,${imageUrl}`}
+                      alt="NFT Preview"
                       className="w-full h-full object-cover"
                     />
                     <button
@@ -183,15 +184,14 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
                   </div>
                 )}
               </div>
-              
+
               <div className="mt-8 flex justify-end">
                 <button
                   type="button"
                   onClick={goToNextStep}
                   disabled={!name || !description || !imageUrl}
-                  className={`neon-button purple-button ${
-                    (!name || !description || !imageUrl) ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={`neon-button purple-button ${(!name || !description || !imageUrl) ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                 >
                   Continue
                 </button>
@@ -201,26 +201,26 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
             <>
               <div className="relative mb-5">
                 <div className="rounded-lg overflow-hidden aspect-square w-40 mx-auto mb-5">
-                  <img 
-                    src={imageUrl} 
-                    alt={name} 
+                  <img
+                    src={`data:image/png;base64,${imageUrl}`}
+                    alt={name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                
+
                 <h4 className="text-center font-orbitron text-white mb-1">{name}</h4>
                 <p className="text-center text-white/50 text-sm mb-6 px-6">{description}</p>
-                
+
                 <div className="mb-8">
                   <label className="block text-sm text-white/70 mb-2">
                     Set Price
                   </label>
-                  <AIPricePredictor 
-                    description={description} 
-                    onPriceSelect={handlePriceSelect} 
+                  <AIPricePredictor
+                    description={description}
+                    onPriceSelect={handlePriceSelect}
                   />
                 </div>
-                
+
                 <div className="flex justify-between mt-8">
                   <button
                     type="button"
@@ -229,13 +229,12 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
                   >
                     Back
                   </button>
-                  
+
                   <button
                     type="submit"
                     disabled={isSubmitting || price <= 0}
-                    className={`neon-button pink-button ${
-                      isSubmitting || price <= 0 ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
+                    className={`neon-button pink-button ${isSubmitting || price <= 0 ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
                   >
                     {isSubmitting ? (
                       <div className="flex items-center">

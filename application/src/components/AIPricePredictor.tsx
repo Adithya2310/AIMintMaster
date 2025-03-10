@@ -42,7 +42,7 @@ const AIPricePredictor: React.FC<AIPricePredictorProps> = ({ description, onPric
         setPriceRange({ min, max });
         onPriceSelect(roundedPrice);
         setLoading(false);
-      }, 1200);
+      }, 3000);
       
       return () => clearTimeout(timer);
     }
