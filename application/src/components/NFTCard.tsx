@@ -22,6 +22,7 @@ const NFTCard: React.FC<NFTCardProps> = ({
   seller 
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  console.log("the nft data is as follows", `https://${imageUrl}`);
 
   // Calculate percentage for AI score indicator
   const scorePercentage = Math.min(aiScore * 10, 100);
@@ -43,7 +44,7 @@ const NFTCard: React.FC<NFTCardProps> = ({
         {/* Image container */}
         <div className={`relative w-full aspect-square overflow-hidden ${isHovered ? 'scale-105' : 'scale-100'} transition-all duration-500`}>
           <img 
-            src={imageUrl} 
+            src={`https://${imageUrl}`} 
             alt={name} 
             className="w-full h-full object-cover"
           />

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import NFTCard from '../components/NFTCard';
 import MintModal from '../components/MintModal';
 import AIChat from '../components/AIChat';
-import { mockNFTs } from '../data/mockNFTData';
 import { Filter, Search, Plus, MessageSquare, SlidersHorizontal } from 'lucide-react';
 import { useWallet } from '@/context/WalletContext';
+import { getAllListedNFTs } from '@/utils/contractUtils';
 
 const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -12,19 +12,43 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5]);
   const [minScore, setMinScore] = useState(0);
-  const [filteredNFTs, setFilteredNFTs] = useState(mockNFTs);
+  const [nfts, setNfts] = useState<any[]>([]);
+  const [filteredNFTs, setFilteredNFTs] = useState<any[]>([]);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'recent' | 'price_asc' | 'price_desc' | 'score'>('recent');
+  const [isLoading, setIsLoading] = useState(true);
   const { account, connectWallet, isConnecting } = useWallet();
+
+  // Fetch NFTs from contract
+  useEffect(() => {
+    const fetchNFTs = async () => {
+      try {
+        const listedNFTs = await getAllListedNFTs();
+        const nftsWithScore = listedNFTs.map(nft => ({
+          ...nft,
+          aiScore: 0.0 // Default AI score
+        }));
+        setNfts(nftsWithScore);
+        setFilteredNFTs(nftsWithScore);
+      } catch (error) {
+        console.error('Error fetching NFTs:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNFTs();
+  }, []);
 
   // Update filtered NFTs when filters change
   useEffect(() => {
-    let filtered = mockNFTs.filter(nft => {
+    let filtered = nfts.filter(nft => {
       const matchesSearch = searchTerm === '' ||
         nft.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         nft.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesPrice = nft.price >= priceRange[0] && nft.price <= priceRange[1];
+      const nftPrice = parseFloat(nft.price);
+      const matchesPrice = nftPrice >= priceRange[0] && nftPrice <= priceRange[1];
       const matchesScore = nft.aiScore >= minScore;
 
       return matchesSearch && matchesPrice && matchesScore;
@@ -34,9 +58,9 @@ const Index = () => {
     filtered = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'price_asc':
-          return a.price - b.price;
+          return parseFloat(a.price) - parseFloat(b.price);
         case 'price_desc':
-          return b.price - a.price;
+          return parseFloat(b.price) - parseFloat(a.price);
         case 'score':
           return b.aiScore - a.aiScore;
         case 'recent':
@@ -46,7 +70,7 @@ const Index = () => {
     });
 
     setFilteredNFTs(filtered);
-  }, [searchTerm, priceRange, minScore, sortBy]);
+  }, [searchTerm, priceRange, minScore, sortBy, nfts]);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -148,7 +172,7 @@ const Index = () => {
 
             <button
               onClick={toggleFilters}
-              className={`p-2.5 rounded-md transition-all duration-300 ${isFiltersOpen || filteredNFTs.length !== mockNFTs.length
+              className={`p-2.5 rounded-md transition-all duration-300 ${isFiltersOpen || filteredNFTs.length !== nfts.length
                 ? 'bg-neonPurple/20 text-neonPurple'
                 : 'bg-white/5 text-white/70 hover:bg-white/10'
                 }`}
@@ -264,9 +288,14 @@ const Index = () => {
         )}
 
         {/* NFT Grid */}
-        {filteredNFTs.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-20">
+            <div className="animate-spin w-12 h-12 border-4 border-neonBlue border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div className="text-white/50">Loading NFTs...</div>
+          </div>
+        ) : filteredNFTs.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredNFTs.map((nft, index) => (
+            {filteredNFTs.map((nft) => (
               <NFTCard
                 key={nft.id}
                 id={nft.id}
@@ -274,7 +303,7 @@ const Index = () => {
                 description={nft.description}
                 imageUrl={nft.imageUrl}
                 price={nft.price}
-                aiScore={nft.aiScore}
+                aiScore={0.0} // Default AI score
                 seller={nft.seller}
               />
             ))}
