@@ -731,7 +731,7 @@ interface NFTData {
 
 interface SonicNFTContract extends ethers.BaseContract {
   mintNFT(name: string, description: string, imageURI: string, price: bigint): Promise<ethers.ContractTransactionResponse>;
-  buyNFT(tokenId: number, value: any): Promise<ethers.ContractTransactionResponse>;
+  buyNFT(tokenId: number, options: { value: bigint }): Promise<ethers.ContractTransactionResponse>;
   getAllListedNFTs(): Promise<NFTData[]>;
   updatePrice(tokenId: number, newPrice: bigint): Promise<ethers.ContractTransactionResponse>;
 }
@@ -766,11 +766,10 @@ export const mintNFT = async (name: string, description: string, imageURI: strin
   return receipt;
 };
 
-export const buyNFT = async (tokenId: number, price: number) => {
+export const buyNFT = async (tokenId: number, options: { value: bigint }) => {
   const contract = await getContract(true);
-  const priceInWei = ethers.parseEther(price.toString());
   
-  const tx = await contract.buyNFT(tokenId, { value: priceInWei });
+  const tx = await contract.buyNFT(tokenId, options);
   const receipt = await tx.wait();
   
   return receipt;

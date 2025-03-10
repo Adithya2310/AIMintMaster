@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import NFTCard from '../components/NFTCard';
 import MintModal from '../components/MintModal';
 import AIChat from '../components/AIChat';
-import { Filter, Search, Plus, MessageSquare, SlidersHorizontal } from 'lucide-react';
+import MyNFTs from './MyNFTs';
+import { Filter, Search, Plus, MessageSquare, SlidersHorizontal, Wallet } from 'lucide-react';
 import { useWallet } from '@/context/WalletContext';
 import { getAllListedNFTs } from '@/utils/contractUtils';
 
 const Index = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isMyNFTsOpen, setIsMyNFTsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5]);
   const [minScore, setMinScore] = useState(0);
@@ -88,6 +91,14 @@ const Index = () => {
     setIsChatOpen(false);
   };
 
+  const openMyNFTs = () => {
+    setIsMyNFTsOpen(true);
+  };
+
+  const closeMyNFTs = () => {
+    setIsMyNFTsOpen(false);
+  };
+
   const toggleFilters = () => {
     setIsFiltersOpen(!isFiltersOpen);
   };
@@ -123,7 +134,7 @@ const Index = () => {
                   </>
                 ) : (
                   <>
-                    <Plus size={18} className="mr-2" />
+                    <Wallet size={18} className="mr-2" />
                     Connect Wallet
                   </>
                 )}
@@ -137,7 +148,13 @@ const Index = () => {
                   Mint New NFT
                 </div>
               </button>
-              <button onClick={openChat} className="neon-button purple-button">
+              <button onClick={openMyNFTs} className="neon-button purple-button">
+                <div className="flex items-center justify-center">
+                  <Wallet size={18} className="mr-2" />
+                  My NFTs
+                </div>
+              </button>
+              <button onClick={openChat} className="neon-button pink-button">
                 <div className="flex items-center justify-center">
                   <MessageSquare size={18} className="mr-2" />
                   Smart Buyer Chat
@@ -345,6 +362,7 @@ const Index = () => {
       {/* Modals */}
       <MintModal isOpen={isModalOpen} onClose={closeModal} />
       <AIChat isOpen={isChatOpen} onClose={closeChat} />
+      <MyNFTs isOpen={isMyNFTsOpen} onClose={closeMyNFTs} />
     </div>
   );
 };

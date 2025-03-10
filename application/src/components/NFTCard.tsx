@@ -1,6 +1,8 @@
-
 import React, { useState } from 'react';
 import { Tag, Zap } from 'lucide-react';
+import { buyNFT } from '@/utils/contractUtils';
+import { useWallet } from '@/context/WalletContext';
+import { ethers } from 'ethers';
 
 interface NFTCardProps {
   id: string;
@@ -22,7 +24,8 @@ const NFTCard: React.FC<NFTCardProps> = ({
   seller 
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  console.log("the nft data is as follows", `https://${imageUrl}`);
+  const [isBuying, setIsBuying] = useState(false);
+  const { account } = useWallet();
 
   // Calculate percentage for AI score indicator
   const scorePercentage = Math.min(aiScore * 10, 100);
@@ -32,6 +35,40 @@ const NFTCard: React.FC<NFTCardProps> = ({
     if (aiScore >= 8) return 'text-neonBlue';
     if (aiScore >= 5) return 'text-neonPurple';
     return 'text-electricPink';
+  };
+
+  const handleBuyNFT = async () => {
+    if (!account) {
+      alert('Please connect your wallet first');
+      return;
+    }
+
+    try {
+      setIsBuying(true);
+      const receipt = await buyNFT(Number(id), {
+        value: ethers.parseEther(price.toString())
+      });
+      
+      const event = receipt.logs.find(
+        (log: any) => log.eventName === 'NFTBought'
+      );
+
+      if (event) {
+        console.log('NFT Bought Successfully:', {
+          tokenId: event.args.tokenId.toString(),
+          buyer: event.args.buyer,
+          price: event.args.price.toString()
+        });
+      }
+      
+      // You might want to trigger a refresh of the NFT list here
+      
+    } catch (error) {
+      console.error('Error buying NFT:', error);
+      alert('Failed to buy NFT. Please try again.');
+    } finally {
+      setIsBuying(false);
+    }
   };
 
   return (
@@ -83,12 +120,27 @@ const NFTCard: React.FC<NFTCardProps> = ({
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs text-white/50 truncate">by {seller.substring(0, 6)}...{seller.substring(seller.length - 4)}</span>
           
-          <button className={`px-4 py-1.5 rounded font-orbitron text-sm transition-all duration-300 ${
-            isHovered 
-              ? 'bg-neonPurple text-white' 
-              : 'bg-transparent text-neonPurple border border-neonPurple'
-          }`}>
-            Buy Now
+          <button 
+            onClick={handleBuyNFT}
+            disabled={isBuying || seller.toLowerCase() === account?.toLowerCase()}
+            className={`px-4 py-1.5 rounded font-orbitron text-sm transition-all duration-300 
+              ${isBuying ? 'bg-gray-500 cursor-not-allowed' : 
+                isHovered 
+                  ? 'bg-neonPurple text-white' 
+                  : 'bg-transparent text-neonPurple border border-neonPurple'
+              }
+              ${seller.toLowerCase() === account?.toLowerCase() ? 'opacity-50 cursor-not-allowed' : ''}
+            `}
+          >
+            {isBuying ? (
+              <div className="flex items-center">
+                <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                Buying...
+              </div>
+            ) : seller.toLowerCase() === account?.toLowerCase() ? 
+              'Your NFT' : 
+              'Buy Now'
+            }
           </button>
         </div>
       </div>
