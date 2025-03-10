@@ -398,6 +398,61 @@ const contractAbi = [
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "getAllNFTs",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "creator",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "owner",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "description",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "imageURI",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "price",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "listed",
+            "type": "bool"
+          }
+        ],
+        "internalType": "struct SonicNFTMarketplace.NFT[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -715,7 +770,7 @@ const contractAbi = [
     "stateMutability": "nonpayable",
     "type": "function"
   }
-]; 
+];
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 interface NFTData {
