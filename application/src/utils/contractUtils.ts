@@ -771,6 +771,7 @@ const contractAbi = [
     "type": "function"
   }
 ];
+
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 interface NFTData {
@@ -788,6 +789,7 @@ interface SonicNFTContract extends ethers.BaseContract {
   mintNFT(name: string, description: string, imageURI: string, price: bigint): Promise<ethers.ContractTransactionResponse>;
   buyNFT(tokenId: number, options: { value: bigint }): Promise<ethers.ContractTransactionResponse>;
   getAllListedNFTs(): Promise<NFTData[]>;
+  getAllNFTs(): Promise<NFT[]>;
   updatePrice(tokenId: number, newPrice: bigint): Promise<ethers.ContractTransactionResponse>;
 }
 
@@ -854,4 +856,35 @@ export const updateNFTPrice = async (tokenId: number, newPrice: number) => {
   const receipt = await tx.wait();
   
   return receipt;
+};
+
+export interface NFT {
+  tokenId: string;
+  creator: string;
+  owner: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  price: string;
+  listed: boolean;
+}
+
+export const getAllNFTs = async (): Promise<NFT[]> => {
+  const contract = await getContract();
+  try {
+    const nfts = await contract.getAllNFTs();
+    return nfts.map((nft: any) => ({
+      tokenId: nft.tokenId.toString(),
+      creator: nft.creator,
+      owner: nft.owner,
+      name: nft.name,
+      description: nft.description,
+      imageUrl: nft.imageURI,
+      price: ethers.formatEther(nft.price),
+      listed: nft.listed
+    }));
+  } catch (error) {
+    console.error('Error fetching all NFTs:', error);
+    throw error;
+  }
 };

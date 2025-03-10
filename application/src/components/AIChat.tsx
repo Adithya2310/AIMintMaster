@@ -42,7 +42,7 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
         {
           id: '1',
           sender: 'ai' as const,
-          text: "Welcome to DeFAI Smart Buyer! I'm your AI assistant for NFT purchases. Ask me anything about NFTs, pricing, or market trends.",
+          text: "Welcome to DeFAI Smart Buy Assitant! I'm your AI assistant for NFT purchases. Ask me anything about NFTs, pricing, or market trends.",
           timestamp: new Date(),
         },
         {
@@ -228,7 +228,7 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
             <div className="w-8 h-8 rounded-full bg-neonPurple/20 flex items-center justify-center mr-3">
               <Zap size={16} className="text-neonPurple" />
             </div>
-            <h3 className="font-orbitron text-lg text-white">DeFAI Smart Buyer</h3>
+            <h3 className="font-orbitron text-lg text-white">DeFAI Smart Buy Assistant</h3>
           </div>
           <button 
             onClick={onClose}
