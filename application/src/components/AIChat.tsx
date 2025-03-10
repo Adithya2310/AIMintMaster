@@ -1,8 +1,8 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, MessageSquare, Zap, ThumbsUp, ThumbsDown } from 'lucide-react';
 import NFTCard from './NFTCard';
 import { mockNFTs } from '../data/mockNFTData';
+import { getNFTRecommendations } from '@/utils/openai';
 
 interface NFTCardData {
   id: string;
@@ -85,7 +85,7 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
   }, [isOpen, onClose]);
 
   // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!input.trim()) return;
@@ -101,106 +101,39 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose }) => {
     setInput('');
     setIsTyping(true);
     
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(input.trim());
-      setMessages((prevMessages) => [...prevMessages, aiResponse]);
-      setIsTyping(false);
-    }, 1500);
-  };
-
-  // Mock AI response generation with NFT cards
-  const generateAIResponse = (userInput: string): Message => {
-    // Filter NFTs based on keywords in the user input
-    const lowercaseInput = userInput.toLowerCase();
-    
-    // Define some common matching rules
-    const matchingNFTs = mockNFTs.filter(nft => {
-      // Match by name or description
-      if (nft.name.toLowerCase().includes(lowercaseInput) || 
-          nft.description.toLowerCase().includes(lowercaseInput)) {
-        return true;
-      }
+    try {
+      // Get AI recommendations
+      const recommendedNFTs = await getNFTRecommendations(input.trim());
       
-      // Match price ranges
-      if (lowercaseInput.includes('cheap') && nft.price < 1.0) {
-        return true;
-      }
-      
-      if (lowercaseInput.includes('expensive') && nft.price > 2.0) {
-        return true;
-      }
-      
-      // Match high AI score
-      if ((lowercaseInput.includes('best') || lowercaseInput.includes('top')) && nft.aiScore > 8.5) {
-        return true;
-      }
-      
-      // Match specific themes
-      if (lowercaseInput.includes('cosmic') && 
-          (nft.name.toLowerCase().includes('cosmic') || nft.description.toLowerCase().includes('cosmic'))) {
-        return true;
-      }
-      
-      if (lowercaseInput.includes('neural') && 
-          (nft.name.toLowerCase().includes('neural') || nft.description.toLowerCase().includes('neural'))) {
-        return true;
-      }
-      
-      if (lowercaseInput.includes('quantum') && 
-          (nft.name.toLowerCase().includes('quantum') || nft.description.toLowerCase().includes('quantum'))) {
-        return true;
-      }
-      
-      return false;
-    });
-    
-    // If no matches, use a fallback for general keywords
-    let nftResults: NFTCardData[] = matchingNFTs;
-    
-    if (nftResults.length === 0) {
-      if (lowercaseInput.includes('trending') || lowercaseInput.includes('popular')) {
-        // Sort by AI score and take top 3
-        nftResults = [...mockNFTs].sort((a, b) => b.aiScore - a.aiScore).slice(0, 3);
-      } else if (lowercaseInput.includes('cheap') || lowercaseInput.includes('affordable')) {
-        // Sort by price (ascending) and take top 3
-        nftResults = [...mockNFTs].sort((a, b) => a.price - b.price).slice(0, 3);
-      } else if (lowercaseInput.includes('expensive') || lowercaseInput.includes('premium')) {
-        // Sort by price (descending) and take top 3
-        nftResults = [...mockNFTs].sort((a, b) => b.price - a.price).slice(0, 3);
-      } else {
-        // Default: return random 3 NFTs
-        nftResults = mockNFTs.sort(() => 0.5 - Math.random()).slice(0, 3);
-      }
-    }
-    
-    // Limit to at most 4 results
-    nftResults = nftResults.slice(0, 4);
-    
-    // If we have NFT results, return them
-    if (nftResults.length > 0) {
-      return {
+      const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        nftCards: nftResults,
-        text: `I found ${nftResults.length} NFTs that match your criteria:`,
+        text: 'These are the NFTs that best match your requirements:',
+        nftCards: recommendedNFTs.map(nft => ({
+          id: nft.id,
+          name: nft.name,
+          description: nft.description,
+          imageUrl: nft.imageUrl,
+          price: parseFloat(nft.price),
+          aiScore: 0, // We can implement AI scoring later
+          seller: nft.seller
+        })),
         timestamp: new Date(),
       };
+      
+      setMessages((prevMessages) => [...prevMessages, aiResponse]);
+    } catch (error) {
+      console.error('Error getting AI recommendations:', error);
+      const errorResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'ai',
+        text: 'Sorry, I encountered an error while searching for NFTs. Please try again.',
+        timestamp: new Date(),
+      };
+      setMessages((prevMessages) => [...prevMessages, errorResponse]);
+    } finally {
+      setIsTyping(false);
     }
-    
-    // Fallback text responses if we couldn't match any NFTs
-    const textResponses = [
-      "I couldn't find any NFTs matching your specific criteria. Try searching with different keywords or browse our trending section.",
-      "No exact matches found. Consider exploring our marketplace using the filters for more targeted results.",
-      "I don't have NFTs that precisely match your request. Would you like to see trending NFTs instead?",
-    ];
-    
-    return {
-      id: (Date.now() + 1).toString(),
-      sender: 'ai',
-      text: textResponses[Math.floor(Math.random() * textResponses.length)],
-      timestamp: new Date(),
-    };
   };
 
   // Auto-resize textarea as user types
