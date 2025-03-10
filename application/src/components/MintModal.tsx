@@ -3,6 +3,7 @@ import { X, Upload, Plus } from 'lucide-react';
 import AIPricePredictor from './AIPricePredictor';
 import AIImageGenerator from './AIImageGenerator';
 import { uploadToPinata } from '@/utils/pinata';
+import { mintNFT } from '@/utils/contractUtils';
 
 interface MintModalProps {
   isOpen: boolean;
@@ -82,54 +83,30 @@ const MintModal: React.FC<MintModalProps> = ({ isOpen, onClose }) => {
 
     try {
       // Upload image to IPFS
-      const { cid, url } = await uploadToPinata(imageUrl, name);
-      console.log('Image uploaded to IPFS:', { cid, url });
+      const { url } = await uploadToPinata(imageUrl, name);
+      console.log('Image uploaded to IPFS:', url);
 
-      // Create metadata JSON
-      const metadata = {
-        name,
-        description,
-        image: url,
-        attributes: [
-          {
-            trait_type: "Price",
-            value: price
-          }
-        ]
-      };
-
-      // Upload metadata to IPFS
-      const metadataBlob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
-      const formData = new FormData();
-      formData.append('file', metadataBlob, 'metadata.json');
+      // Mint NFT using smart contract
+      const receipt = await mintNFT(name, description, url, price);
       
-      const metadataRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_PINATE_JWT_TOKEN}`,
-        },
-        body: formData,
-      });
+      // Get the NFTMinted event from the receipt
+      const event = receipt.logs.find(
+        (log: any) => log.eventName === 'NFTMinted'
+      );
 
-      const metadataData = await metadataRes.json();
-      
-      if (!metadataRes.ok) {
-        throw new Error('Error uploading metadata to Pinata');
+      if (event) {
+        console.log('NFT Minted Successfully:', {
+          tokenId: event.args.tokenId.toString(),
+          creator: event.args.creator,
+          imageURI: event.args.imageURI,
+          price: event.args.price.toString()
+        });
       }
-
-      console.log('NFT Minted:', { 
-        name, 
-        description, 
-        imageCID: cid,
-        imageUrl: url,
-        metadataCID: metadataData.IpfsHash,
-        metadataUrl: `${import.meta.env.VITE_PINATA_GATEWAY}/ipfs/${metadataData.IpfsHash}`,
-        price 
-      });
 
       onClose();
     } catch (error) {
       console.error('Error during minting process:', error);
+      // You might want to show an error message to the user here
     } finally {
       setIsSubmitting(false);
     }

@@ -89,7 +89,7 @@ const AIPricePredictor: React.FC<AIPricePredictorProps> = ({ description, onPric
         
         <button 
           onClick={handleActivate} 
-          className={`ml-2 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+          className={`ml-2 w-10 h-10 rounded-full flex items-center cursor-pointer justify-center transition-all duration-300 ${
             isActive ? 'bg-neonBlue/20 text-neonBlue' : 'bg-white/5 text-white/70 hover:bg-white/10'
           }`}
           disabled={loading || isActive}
@@ -101,7 +101,7 @@ const AIPricePredictor: React.FC<AIPricePredictorProps> = ({ description, onPric
       {loading && (
         <div className="mt-3 flex items-center justify-center py-2">
           <div className="w-5 h-5 rounded-full border-2 border-neonBlue border-t-transparent animate-spin"></div>
-          <span className="ml-2 text-sm text-white/70">Analyzing market conditions...</span>
+          <span className="ml-2 text-sm text-white/70">Analyzing nft metadata...</span>
         </div>
       )}
       
@@ -128,8 +128,7 @@ const AIPricePredictor: React.FC<AIPricePredictorProps> = ({ description, onPric
               max={priceRange.max}
               step="0.01"
               value={sliderValue}
-              onChange={handleSliderChange}
-              className="w-full h-1 appearance-none bg-transparent cursor-pointer focus:outline-none"
+              className="w-full h-1 appearance-none bg-transparent focus:outline-none"
               style={{
                 background: `linear-gradient(to right, rgba(160, 32, 240, 0.5) 0%, rgba(0, 255, 255, 0.5) 50%, rgba(0, 255, 255, 0.5) 100%)`,
               }}
@@ -146,7 +145,6 @@ const AIPricePredictor: React.FC<AIPricePredictorProps> = ({ description, onPric
                 border-radius: 50%;
                 background: white;
                 border: 2px solid #00FFFF;
-                cursor: pointer;
                 box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
               }
               
@@ -156,7 +154,6 @@ const AIPricePredictor: React.FC<AIPricePredictorProps> = ({ description, onPric
                 border-radius: 50%;
                 background: white;
                 border: 2px solid #00FFFF;
-                cursor: pointer;
                 box-shadow: 0 0 10px rgba(0, 255, 255, 0.7);
               }
               `}
