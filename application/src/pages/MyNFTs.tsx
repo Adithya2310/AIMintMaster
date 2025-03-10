@@ -186,11 +186,11 @@ const MyNFTs: React.FC<MyNFTsProps> = ({ isOpen, onClose }) => {
                         </div>
                         
                         <div className="flex space-x-3">
-                          <button className="px-4 py-2 rounded bg-white/5 text-white/70 hover:bg-white/10 transition-colors text-sm">
-                            Transfer
+                          <button className="px-4 py-2 rounded bg-white/5 text-white/70 cursor-not-allowed transition-colors text-sm">
+                            Transfer(Soon)
                           </button>
-                          <button className="px-4 py-2 rounded bg-neonPurple/20 text-neonPurple hover:bg-neonPurple/30 transition-colors text-sm font-medium">
-                            List for Sale
+                          <button className="px-4 py-2 rounded bg-neonPurple/20 text-neonPurple cursor-not-allowed transition-colors text-sm font-medium">
+                            List for Sale(Soon)
                           </button>
                         </div>
                       </div>
